@@ -9,6 +9,7 @@
   "author": "Piotr Bienias",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.16.3",
     "npm": "^6.0.0"
   }
 }
