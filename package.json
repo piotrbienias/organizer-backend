@@ -1,0 +1,14 @@
+{
+  "name": "organizer",
+  "version": "1.0.0",
+  "description": "Private organiser.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Piotr Bienias",
+  "license": "ISC",
+  "dependencies": {
+    "npm": "^6.0.0"
+  }
+}
