@@ -1,15 +1,20 @@
 import express from 'express';
-import Sequelize from 'sequelize';
+import routers from './controllers';
+import db from './config/db';
+import bodyParser from 'body-parser';
 
-const app = express();
-const sequelize = new Sequelize( process.env.DATABASE_URL );
+var app = express();
 
-sequelize.authenticate().then(() => {
-    console.log('Connection has been established');
-}).catch(err => {
-    console.error('Cannot connect to the database: ', err);
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Access');
+    next();
 });
 
-app.get('/', (req, res) => res.send('Hello world - tralala'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(routers);
 
 app.listen(3000, () => console.log('Example app listening on port 3000'));
