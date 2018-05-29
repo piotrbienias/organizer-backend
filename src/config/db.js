@@ -27,7 +27,6 @@ const models = Object.assign({}, ...fs.readdirSync(modelsDirectory)
     })
 );
 
-console.log(models);
 
 for(const model of Object.keys(models)) {
     typeof models[model].associate === 'function' && models[model].associate(models);

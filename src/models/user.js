@@ -88,11 +88,17 @@ export default class User extends Sequelize.Model {
         return bcrypt.compareSync(password, this.get('password'));
     }
 
+    changePassword(password) {
+        this.set('password', password);
+        return this.save();
+    }
+
     toJson() {
         var user = {
             id: this.get('id'),
             username: this.get('username'),
-            email: this.get('email')
+            email: this.get('email'),
+            isDeleted: !!this.get('deletedAt')
         };
 
         user.userCategory = this.UserCategory ? this.UserCategory.toJson() : this.get('userCategoryId');

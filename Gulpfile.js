@@ -1,25 +1,12 @@
-var gulp = require('gulp'),
-    spawn = require('child_process').spawn,
-    babel = require('gulp-babel'),
+var gulp    = require('gulp'),
+    babel   = require('gulp-babel'),
+    nodemon = require('gulp-nodemon'),
     node;
-
-
-// run node server
-gulp.task('server', function() {
-    if (node) node.kill();
-
-    node = spawn('node', ['build/index.js'], { stdio: 'inherit' });
-    node.on('close', function(code) {
-        if (code === 8) {
-            gulp.log('Error detected');
-        }
-    });
-});
 
 
 // babel
 gulp.task('babel', function() {
-    gulp.src('src/**/*.js')
+    return gulp.src('src/**/*.js')
         .pipe(babel({
             presets: [['env', {
                 "targets": {
@@ -31,8 +18,20 @@ gulp.task('babel', function() {
 });
 
 
-gulp.task('default', function() {
-    gulp.run(['babel', 'server']);
+// nodemon
+gulp.task('nodemon', ['babel'], function() {
+    
+    return nodemon({
+        script: './build/index.js',
+        ext: 'js',
+        watch: 'src',
+        tasks: ['babel']
+    }).on('restart', function() {
+            console.log('Server restarted');
+    }).on('start', function() {
+        console.log('Server started');
+    });
 
-    gulp.watch(['./src/**/*.js'], ['babel', 'server']);
 });
+
+gulp.task('default', ['nodemon']);
