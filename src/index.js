@@ -28,8 +28,4 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(routers);
 
-app.get('/', (req, res) => {
-    res.send({ message: 'Hello world :D' });
-});
-
 app.listen(3000, () => console.log('Example app listening on port 3000'));

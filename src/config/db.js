@@ -14,6 +14,10 @@ var sequelize = new Sequelize(
     }
 );
 
+sequelize.Validator.notNull = function(item) {
+    return !this.isNull(item);
+}
+
 var db = {};
 
 const modelsDirectory = path.dirname(__dirname) + '/models/';

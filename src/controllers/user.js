@@ -1,7 +1,7 @@
 import express from 'express';
 
 import db from '../config/db';
-import { TransformSequelizeValidationError } from '../helpers/errors';
+import { TransformSequelizeValidationError, apiError } from '../helpers/errors';
 
 var router = express.Router();
 
@@ -40,7 +40,7 @@ router.post('/', (req, res) => {
             });
         }
     }).catch(e => {
-        res.status(400).send(TransformSequelizeValidationError(e));
+        res.status(422).send(apiError(e));
     });
 });
 

@@ -10,20 +10,14 @@ export default class User extends Sequelize.Model {
         return super.init({
             username: {
                 type: Sequelize.STRING,
-                unique: true,
-                allowNull: {
-                    msg: 'Proszę podać nazwę uzytkownika'
-                }
+                unique: { msg: 'Podana nazwa uzytkownika jest juz zajęta' },
+                allowNull: { msg: 'Proszę podać nazwę uzytkownika' }
             },
             password: {
                 type: Sequelize.STRING,
-                allowNull: {
-                    msg: 'Proszę podać hasło'
-                },
+                allowNull: { msg: 'Proszę podać hasło' },
                 validate: {
-                    notEmpty: {
-                        msg: 'Hasło nie moze być puste'
-                    }
+                    notEmpty: { msg: 'Hasło nie moze być puste' }
                 },
                 set(value) {
                     this.setDataValue('password', bcrypt.hashSync(value, 10));
@@ -38,9 +32,10 @@ export default class User extends Sequelize.Model {
             },
             email: {
                 type: Sequelize.STRING,
-                unique: true,
+                unique: { msg: 'Podany adres e-mail został juz uzyty' },
                 allowNull: false,
                 validate: {
+                    notNull: { msg: 'Proszę podać adres e-mail' },
                     notEmpty: { msg: 'Proszę podać adres e-mail' },
                     isEmail: { msg: 'Proszę podać prawidłowy adres e-mail' }
                 }
