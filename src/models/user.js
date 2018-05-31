@@ -88,7 +88,7 @@ export default class User extends Sequelize.Model {
         return this.save();
     }
 
-    toJson() {
+    serialize() {
         var user = {
             id: this.get('id'),
             username: this.get('username'),
@@ -96,10 +96,10 @@ export default class User extends Sequelize.Model {
             isDeleted: !!this.get('deletedAt')
         };
 
-        user.userCategory = this.UserCategory ? this.UserCategory.toJson() : this.get('userCategoryId');
+        user.userCategory = this.UserCategory ? this.UserCategory.serialize() : this.get('userCategoryId');
 
         user.permissions = this.Permissions ? this.Permissions.map(permission => {
-            return permission.toJson();
+            return permission.serialize();
         }) : this.get('Permissions');
 
         return user;

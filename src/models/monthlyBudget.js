@@ -52,13 +52,39 @@ class MonthlyBudget extends Sequelize.Model {
             sequelize: sequelize,
             tableName: 'monthly_budgets',
             timestamps: true,
-            paranoid: true
+            paranoid: true,
+            scopes: {
+                withExpenses: function() {
+                    return {
+                        include: {
+                            model: sequelize.models.Expense,
+                            as: 'expenses'
+                        }
+                    }
+                }
+            }
         });
     }
 
-    toJson() {
+    static associate(models) {
+        this.hasMany(models.Expense, { foreignKey: 'monthlyBudgetId', as: 'expenses' });
+    }
+
+    serialize() {
         var monthlyBudget = {}
         Object.assign(monthlyBudget, this.toJSON());
+
+        if (this.expenses) {
+            var totalExpenses = 0;
+            
+            monthlyBudget.expenses = this.expenses.map(expense => {
+                totalExpenses += parseFloat(expense.value);
+                return expense.serialize();
+            });
+
+            monthlyBudget.totalExpenses = totalExpenses;
+            monthlyBudget.valueLeft = parseFloat(monthlyBudget.value) - monthlyBudget.totalExpenses;
+        }
         
         delete monthlyBudget['updatedAt'];
         delete monthlyBudget['createdAt'];

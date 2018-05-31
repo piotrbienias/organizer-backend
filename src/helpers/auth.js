@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken';
+import models from './../config/db';
+import { find } from 'underscore';
 
 
 export const verifyToken = (token) => {
@@ -16,7 +18,7 @@ export const verifyToken = (token) => {
 export const createToken = (data) => {
     return jwt.sign({
         data: data
-    }, process.env.JWT_SECRET || 'default-secret-key', { expiresIn: 60 * 5 });
+    }, process.env.JWT_SECRET || 'default-secret-key', { expiresIn: 60 * 60 });
 };
 
 export const verifyTokenMiddleware = (req, res, next) => {
@@ -29,8 +31,10 @@ export const verifyTokenMiddleware = (req, res, next) => {
         }
 
         verifyToken(token).then(decodedToken => {
-            req.user = decodedToken.data;
-            next();
+            models.User.scope(['withUserCategory', 'withPermissions']).findById(decodedToken.data.id).then(user => {
+                req.user = user.serialize();
+                next();
+            });
         }).catch(e => {
             res.status(401).send({ message: 'Invalid authorization token' });
         });
@@ -38,4 +42,16 @@ export const verifyTokenMiddleware = (req, res, next) => {
         next();
     }
     
+};
+
+export const checkIfUserHasPermission = (permissionLabel, req, res, next) => {
+    var userHasPermission = find(req.user.permissions, (permission) => {
+        return permission.label === permissionLabel
+    });
+
+    if (userHasPermission) {
+        next();
+    } else {
+        res.status(401).send({ message: 'Brak autoryzacji', statusCode: 401 });
+    }
 };
