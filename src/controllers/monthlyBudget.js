@@ -144,11 +144,8 @@ router.put('/:monthlyBudgetId/expenses/', (req, res) => {
                     return Promise.all(promisesArray);
                 })
             }).then(result => {
-                console.log(createdExpenses);
-                console.log(result);
                 res.send({ message: 'Budzet został zaktualizowany' })
             }).catch(e => {
-                console.log(e);
                 res.send(apiError(e));
             });
         } else {
