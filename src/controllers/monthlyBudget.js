@@ -90,4 +90,74 @@ router.delete('/:monthlyBudgetId', (req, res) => {
 });
 
 
+// get expenses of single monthly budget with id = monthlyBudgetId
+router.get('/:monthlyBudgetId/expenses/', (req, res) => {
+
+    models.MonthlyBudget.findById(req.params['monthlyBudgetId']).then(monthlyBudget => {
+        if (monthlyBudget) {
+            monthlyBudget.getExpenses().then(expenses => {
+                res.send(expenses.map(expense => {
+                    return expense.serialize();
+                }));
+            });
+        } else {
+            res.status(404).send({ message: 'Poszukiwany obiekt nie istnieje' });
+        }
+    });
+
+});
+
+
+// set expenses of single monthly budget with id = monthlyBudgetId
+router.put('/:monthlyBudgetId/expenses/', (req, res) => {
+
+    models.MonthlyBudget.findById(req.params['monthlyBudgetId']).then(monthlyBudget => {
+        if (monthlyBudget) {
+            var existingExpenses = [];
+            var newExpenses = [];
+            req.body.forEach(expense => {
+                if (expense.id) {
+                    existingExpenses.push(expense);
+                } else {
+                    newExpenses.push(expense);
+                }
+            });
+
+            var createdExpenses;
+            return models.sequelize.transaction(t => {
+                return models.Expense.bulkCreate(newExpenses, { transaction: t }).then(result => {
+                    createdExpenses = result;
+
+                    var promisesArray = [];
+                    existingExpenses.forEach(existingExpense => {
+                        promisesArray.push(
+                            models.Expense.update(
+                                existingExpense,
+                                {
+                                    where: { id: existingExpense.id },
+                                    transaction: t
+                                }
+                            )
+                        );
+                    });
+
+                    return Promise.all(promisesArray);
+                })
+            }).then(result => {
+                console.log(createdExpenses);
+                console.log(result);
+                res.send({ message: 'Budzet został zaktualizowany' })
+            }).catch(e => {
+                console.log(e);
+                res.send(apiError(e));
+            });
+        } else {
+            res.status(404).send({ message: 'Poszukiwany obiekt nie istnieje' });
+        }
+    }).catch(e => {
+        res.status(422).send(apiError(e));
+    });
+
+})
+
 export default router;

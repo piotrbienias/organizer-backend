@@ -11,13 +11,11 @@ import expenseRouter        from './expense';
 
 
 
-
-
-export default (socket) => {
+export default (io) => {
 
     const router = express.Router();
 
-    router.use('/users',            userRouter(socket));
+    router.use('/users',            userRouter(io));
     router.use('/car_activities',   carActivityRouter);
     router.use('/user_categories',  userCategoryRouter);
     router.use('/auth',             authRouter);

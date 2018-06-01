@@ -36,4 +36,6 @@ for(const model of Object.keys(models)) {
     typeof models[model].associate === 'function' && models[model].associate(models);
 }
 
+models.sequelize = sequelize;
+
 export default models;

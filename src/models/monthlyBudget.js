@@ -26,7 +26,7 @@ class MonthlyBudget extends Sequelize.Model {
 
     static init(sequelize){
         return super.init({
-            value: {
+            budget: {
                 type: Sequelize.DECIMAL(10, 2),
                 allowNull: false,
                 validate: {
@@ -41,11 +41,18 @@ class MonthlyBudget extends Sequelize.Model {
                 }
             },
             month: {
-                type: Sequelize.ENUM,
-                values: MonthlyBudget.MONTH_VALUES,
+                type: Sequelize.INTEGER,
                 allowNull: false,
                 validate: {
-                    notNull: { msg: 'Miesiąc budzetu jest obowiązkowy' }
+                    notNull: { msg: 'Miesiąc budzetu jest obowiązkowy' },
+                    min: {
+                        args: 1,
+                        msg: 'Wartość musi być w zakresie 1-12'
+                    },
+                    max: {
+                        args: 12,
+                        msg: 'Wartość musi być w zakresie 1-12'
+                    }
                 }
             }
         }, {
@@ -77,15 +84,19 @@ class MonthlyBudget extends Sequelize.Model {
         if (this.expenses) {
             var totalExpenses = 0;
             
-            monthlyBudget.expenses = this.expenses.map(expense => {
+            this.expenses.forEach(expense => {
                 totalExpenses += parseFloat(expense.value);
-                return expense.serialize();
             });
 
+            delete monthlyBudget['expenses'];
+
             monthlyBudget.totalExpenses = totalExpenses;
-            monthlyBudget.valueLeft = parseFloat(monthlyBudget.value) - monthlyBudget.totalExpenses;
+            monthlyBudget.budgetLeft = parseFloat(monthlyBudget.budget) - monthlyBudget.totalExpenses;
         }
+
+        monthlyBudget.isDeleted = !!monthlyBudget['deletedAt'];
         
+        delete monthlyBudget['deletedAt'];
         delete monthlyBudget['updatedAt'];
         delete monthlyBudget['createdAt'];
 

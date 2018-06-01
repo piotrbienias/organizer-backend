@@ -27,7 +27,7 @@ gulp.task('nodemon', ['babel'], function() {
         watch: 'src',
         tasks: ['babel']
     }).on('restart', function() {
-            console.log('Server restarted');
+        console.log('Server restarted');
     }).on('start', function() {
         console.log('Server started');
     });

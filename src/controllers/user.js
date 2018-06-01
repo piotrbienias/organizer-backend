@@ -4,9 +4,10 @@ import db from '../config/db';
 import { TransformSequelizeValidationError, apiError } from '../helpers/errors';
 
 
-export default (socket) => {
+export default (io) => {
 
     var router = express.Router();
+    const UPDATE_USER_LIST = 'UPDATE_USER_LIST';
 
     // return number of all users
     router.get('/count', (req, res) => {
@@ -60,7 +61,7 @@ export default (socket) => {
                         var user = self.serialize();
                         res.send(user);
 
-                        socket.broadcast.emit('CREATE_USER', user);
+                        io.sockets.emit(UPDATE_USER_LIST, user);
                         
                     });
                 });
@@ -89,7 +90,7 @@ export default (socket) => {
                                 var user = self.serialize();
                                 res.send(user);
 
-                                io.sockets.emit('UPDATE_USER', user);
+                                io.sockets.emit(UPDATE_USER_LIST, user);
                             });
                         });
                     } else {
@@ -114,7 +115,8 @@ export default (socket) => {
                 user.destroy().then(() => {
                     res.send({ message: 'Wybrany uzytkownik został usunięty' });
 
-                    io.sockets.emit('DELETE_USER', user.id);
+                    console.log(UPDATE_USER_LIST);
+                    io.sockets.emit(UPDATE_USER_LIST, user.id);
                 });
             } else {
                 res.status(404).send({ message: 'Wybrany uzytkownik nie istnieje' });
@@ -135,7 +137,7 @@ export default (socket) => {
 
                         res.send(user);
 
-                        io.sockets.emit('UPDATE_USER', user);
+                        io.sockets.emit(UPDATE_USER_LIST, user);
                     });
                 });
             } else {

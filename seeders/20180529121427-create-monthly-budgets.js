@@ -5,23 +5,23 @@ module.exports = {
     return queryInterface.bulkInsert('monthly_budgets', [
       {
         id: 1,
-        value: 4000.00,
+        budget: 4000.00,
         year: 2018,
-        month: 'Styczeń',
+        month: 1,
         createdAt: new Date()
       },
       {
         id: 2,
-        value: 5000.00,
+        budget: 5000.00,
         year: 2018,
-        month: 'Luty',
+        month: 2,
         createdAt: new Date()
       },
       {
         id: 3,
-        value: 5500.00,
+        budget: 5500.00,
         year: 2018,
-        month: 'Marzec',
+        month: 3,
         createdAt: new Date()
       }
     ]);

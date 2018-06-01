@@ -23,6 +23,8 @@ export const createToken = (data) => {
 
 export const verifyTokenMiddleware = (req, res, next) => {
 
+    console.log(req.method);
+
     if (req.method !== 'OPTIONS'){
         
         let token = '';
@@ -45,13 +47,25 @@ export const verifyTokenMiddleware = (req, res, next) => {
 };
 
 export const checkIfUserHasPermission = (permissionLabel, req, res, next) => {
-    var userHasPermission = find(req.user.permissions, (permission) => {
-        return permission.label === permissionLabel
-    });
+    
+    if (req.method !== 'OPTIONS') {
 
-    if (userHasPermission) {
-        next();
+        
+        if (!req.user) {
+            return res.status(401).send({ message: 'Brak autoryzacji', statusCode: 401 });
+        }
+
+        var userHasPermission = find(req.user.permissions, (permission) => {
+            return permission.label === permissionLabel
+        });
+
+        if (userHasPermission) {
+            next();
+        } else {
+            res.status(401).send({ message: 'Brak autoryzacji', statusCode: 401 });
+        }
     } else {
-        res.status(401).send({ message: 'Brak autoryzacji', statusCode: 401 });
+        next();
     }
+    
 };

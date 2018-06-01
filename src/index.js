@@ -32,6 +32,4 @@ app.use(/^((?!\/auth\/login\/)).*$/, verifyTokenMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-io.on('connection', socket => {
-    app.use(routers(socket));
-});
+app.use(routers(io));

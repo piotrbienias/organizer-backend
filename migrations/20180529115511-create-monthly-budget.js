@@ -1,7 +1,5 @@
 'use strict';
 
-var MonthlyBudget = require('./../build/models/monthlyBudget').default;
-
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
@@ -12,7 +10,7 @@ module.exports = {
         allowNull: false,
         autoIncrement: true
       },
-      value: {
+      budget: {
         type: Sequelize.DECIMAL(10, 2),
         allowNull: false
       },
@@ -21,9 +19,18 @@ module.exports = {
           allowNull: false
       },
       month: {
-          type: Sequelize.ENUM,
-          values: MonthlyBudget.MONTH_VALUES,
-          allowNull: false
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        validate: {
+            min: {
+                args: 1,
+                msg: 'Wartość musi być w zakresie 1-12'
+            },
+            max: {
+                args: 12,
+                msg: 'Wartość musi być w zakresie 1-12'
+            }
+        }
       },
       createdAt: {
         type: Sequelize.DATE,
