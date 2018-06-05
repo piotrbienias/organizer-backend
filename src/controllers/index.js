@@ -21,7 +21,7 @@ export default (io) => {
     router.use('/auth',             authRouter);
     router.use('/account',          accountRouter);
     router.use('/permissions',      permissionRouter);
-    router.use('/monthly_budgets',  monthlyBudgetRouter);
+    router.use('/monthly_budgets',  monthlyBudgetRouter(io));
     router.use('/expenses',         expenseRouter);
 
     return router;
