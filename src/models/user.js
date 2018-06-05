@@ -73,6 +73,7 @@ export default class User extends Sequelize.Model {
     static associate(models) {
         this.belongsTo(models.UserCategory, { foreignKey: 'userCategoryId' });
         this.belongsToMany(models.Permission, { as: 'Permissions', through: models.UserPermissions, foreignKey: 'userId' });
+        this.belongsToMany(models.Event, { as: 'Members', through: models.EventMember, foreignKey: 'memberId' });
     }
 
     static findByUsername(username) {

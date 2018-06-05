@@ -27,7 +27,7 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(/^((?!\/auth\/login\/)).*$/, verifyTokenMiddleware);
+// app.use(/^((?!\/auth\/login\/)).*$/, verifyTokenMiddleware);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
