@@ -1,10 +1,16 @@
 import express from 'express';
+import http from 'http';
+import socketIO from 'socket.io';
+import bodyParser from 'body-parser';
+
 import routers from './controllers';
 import db from './config/db';
-import bodyParser from 'body-parser';
 import { verifyTokenMiddleware } from './helpers/auth';
 
+
 var app = express();
+var server = app.listen(3000, () => { console.log('Express app is listening on port 3000') });
+var io = socketIO(server);
 
 
 app.use((req, res, next) => {
@@ -21,15 +27,9 @@ app.use((req, res, next) => {
     next();
 });
 
-// app.use(/^((?!\/auth\/login\/)).*$/, verifyTokenMiddleware);
+app.use(/^((?!\/auth\/login\/)).*$/, verifyTokenMiddleware);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(routers);
-
-app.get('/', (req, res) => {
-    res.send({ message: 'Hello world :D' });
-});
-
-app.listen(3000, () => console.log('Example app listening on port 3000'));
+app.use(routers(io));

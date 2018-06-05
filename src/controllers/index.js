@@ -6,14 +6,24 @@ import userCategoryRouter   from './userCategory';
 import authRouter           from './auth';
 import accountRouter        from './account';
 import permissionRouter     from './permission'
+import monthlyBudgetRouter  from './monthlyBudget';
+import expenseRouter        from './expense';
 
-const router = express.Router();
 
-router.use('/users',            userRouter);
-router.use('/car_activities',   carActivityRouter);
-router.use('/user_categories',  userCategoryRouter);
-router.use('/auth',             authRouter);
-router.use('/account',          accountRouter);
-router.use('/permissions',      permissionRouter);
 
-export default router;
+export default (io) => {
+
+    const router = express.Router();
+
+    router.use('/users',            userRouter(io));
+    router.use('/car_activities',   carActivityRouter);
+    router.use('/user_categories',  userCategoryRouter);
+    router.use('/auth',             authRouter);
+    router.use('/account',          accountRouter);
+    router.use('/permissions',      permissionRouter);
+    router.use('/monthly_budgets',  monthlyBudgetRouter(io));
+    router.use('/expenses',         expenseRouter);
+
+    return router;
+
+};

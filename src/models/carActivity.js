@@ -27,7 +27,7 @@ class CarActivity extends Sequelize.Model {
         });
     }
 
-    toJson() {
+    serialize() {
         return {
             id: this.get('id'),
             activityName: this.get('activityName'),

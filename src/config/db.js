@@ -14,6 +14,10 @@ var sequelize = new Sequelize(
     }
 );
 
+sequelize.Validator.notNull = function(item) {
+    return !this.isNull(item);
+}
+
 var db = {};
 
 const modelsDirectory = path.dirname(__dirname) + '/models/';
@@ -31,5 +35,7 @@ const models = Object.assign({}, ...fs.readdirSync(modelsDirectory)
 for(const model of Object.keys(models)) {
     typeof models[model].associate === 'function' && models[model].associate(models);
 }
+
+models.sequelize = sequelize;
 
 export default models;
