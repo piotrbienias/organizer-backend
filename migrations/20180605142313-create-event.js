@@ -25,6 +25,14 @@ module.exports = {
           type: Sequelize.DATE,
           allowNull: false
       },
+      repeatInterval: Sequelize.INTEGER,
+      parentEventId: {
+          type: Sequelize.INTEGER,
+          references: {
+              model: 'events',
+              key: 'id'
+          }
+      },
       description: Sequelize.TEXT,
       organizerId: {
         type: Sequelize.INTEGER,

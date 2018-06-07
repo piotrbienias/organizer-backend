@@ -14,7 +14,22 @@ export default (io) => {
     // return all events
     router.get('/', (req, res) => {
 
-        models.Event.scope(['withOrganizer', 'withMembers']).findAll().then(events => {
+        var month = req.query['month'] || undefined;
+        var year = req.query['year'] || new Date().getFullYear();
+
+        var queryOptions = {};
+        if (month && year) {
+            var minDate = new Date(year, month, 1);
+            var maxDate = new Date(year, month, 31);
+            queryOptions.where = {
+                date: {
+                    $lte: maxDate,
+                    $gte: minDate
+                }
+            };
+        }
+
+        models.Event.scope(['withOrganizer', 'withMembers']).findAll(queryOptions).then(events => {
             res.send(events.map(event => {
                 return event.serialize();
             }));
@@ -77,15 +92,13 @@ export default (io) => {
     // delete single event with id = eventId
     router.delete('/:eventId', (req, res) => {
 
-        models.Event.destroy({ where: { id: req.params['eventId'] } }).then(deletedRows => {
-            if (deletedRows > 0) {
-                res.send({ message: 'Obiekt został usunięty' });
-            } else {
-                res.status(404).send({ message: 'Poszukiwany obiekt nie istnieje' });
-            }
+        var deleteAll = req.query['deleteAll'] === 'true';
+
+        models.Event.deleteEvent(req.params['eventId'], deleteAll).then(() => {
+            res.send({ message: 'Obiekt został pomyślnie usunięty' });
         }).catch(e => {
-            res.status(500).send(apiError(e));
-        });
+            res.status(500).send(apiErro(e));
+        })
 
     });
 

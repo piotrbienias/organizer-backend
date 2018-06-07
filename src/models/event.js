@@ -24,6 +24,14 @@ class Event extends Sequelize.Model {
                 type: Sequelize.DATE,
                 allowNull: false
             },
+            repeatInterval: Sequelize.INTEGER,
+            parentEventId: {
+                type: Sequelize.INTEGER,
+                references: {
+                    model: sequelize.models.Event,
+                    key: 'id'
+                }
+            },
             description: Sequelize.TEXT,
             organizerId: {
                 type: Sequelize.INTEGER,
@@ -41,6 +49,9 @@ class Event extends Sequelize.Model {
             setterMethods: {
                 organizer: function(organizerId) {
                     return this.setDataValue('organizerId', organizerId);
+                },
+                parentEvent: function(parentEventId) {
+                    return this.setDataValue('parentEventId', parentEventId);
                 }
             },
             scopes: {
@@ -58,21 +69,74 @@ class Event extends Sequelize.Model {
                             as: 'Members'
                         }
                     };
+                },
+                withParent: function() {
+                    return {
+                        include: {
+                            model: sequelize.models.Event
+                        }
+                    }
+                },
+                withChildren: function() {
+                    return {
+                        include: {
+                            model: sequelize.models.Event,
+                            as: 'ChildEvents'
+                        }
+                    }
                 }
             }
         });
     }
 
     static associate(models) {
+        this.belongsTo(models.Event, { foreignKey: 'parentEventId' });
+        this.hasMany(models.Event, { as: 'ChildEvents', foreignKey: 'parentEventId' });
         this.belongsTo(models.User, { foreignKey: 'organizerId' });
         this.belongsToMany(models.User, { through: models.EventMember, as: 'Members', foreignKey: 'eventId' });
+    }
+
+    static deleteEvent(eventId, deleteAll) {
+        return this.findById(eventId).then(event => {
+            if (event) {
+                console.log('-----------------------');
+                console.log('DELETE ALL: ', deleteAll);
+                console.log('-----------------------');
+
+                console.log(deleteAll === false);
+                console.log(typeof deleteAll);
+
+                if (!deleteAll) {
+                    return event.destroy();
+                } else {
+                    var idToDestroy = event.get('parentEventId') ? event.get('parentEventId') : event.get('id');
+                    var query = {
+                        where: {
+                            $or: {
+                                parentEventId: idToDestroy,
+                                id: idToDestroy
+                            }
+                        }
+                    };
+
+                    return this.destroy(query).then(deletedRows => {
+                        return deletedRows;
+                    }).catch(e => {
+                        throw e;
+                    });
+                }
+            }
+            
+            return null;
+        });
     }
 
     static createRepeatableEvent(req) {
         var data = req.body;
         var members = data.members || [];
 
-        data.organizer = req.user ? req.user.id : 1;
+        var repeatInterval = data.repeatInterval;
+        data.parentEvent = null;
         
         if (repeatInterval && repeatInterval !== parseInt(repeatInterval, 10)) {
             throw new Error('Częstotliwość powtarzania musi być dodatnią liczbą całkowitą');
@@ -83,9 +147,9 @@ class Event extends Sequelize.Model {
             tempCurrentDate.setFullYear(tempCurrentDate.getFullYear() + 1);
 
             var endDate = data.endDate ? new Date(data.endDate) : tempCurrentDate;
-            var repeatInterval = data.repeatInterval;
-            
+
             var createdEvents = null;
+            var parentEvent = null;
             var dataArray = [];
 
             for( var tempDate = new Date(data.date); tempDate <= endDate; tempDate.setDate(tempDate.getDate() + repeatInterval)) {
@@ -97,15 +161,25 @@ class Event extends Sequelize.Model {
 
             return this.sequelize.transaction(t => {
 
-                return this.bulkCreate(dataArray, { transaction: t, returning: true }).then(events => {
-                    createdEvents = events;
-
-                    var membersPromisesArray = [];
-                    events.forEach(event => {
-                        membersPromisesArray.push(event.setMembers(members, { transaction: t }));
+                return this.create(dataArray[0], { transaction: t }).then(firstEvent => {
+                    parentEvent = firstEvent;
+                    dataArray.map(singleData => {
+                        singleData.parentEvent = firstEvent.id;
                     });
-                    
-                    return Promise.all(membersPromisesArray);
+
+                    dataArray.shift();
+
+                    return this.bulkCreate(dataArray, { transaction: t, returning: true }).then(events => {
+                        createdEvents = events;
+                        createdEvents.push(parentEvent);
+    
+                        var membersPromisesArray = [];
+                        events.forEach(event => {
+                            membersPromisesArray.push(event.setMembers(members, { transaction: t }));
+                        });
+                        
+                        return Promise.all(membersPromisesArray);
+                    });
                 });
 
             }).then(events => {
@@ -115,7 +189,20 @@ class Event extends Sequelize.Model {
             });
             
         } else {
-            return this.create(data);
+            var createdEvent = null;
+
+            return this.sequelize.transaction(t => {
+
+                return this.create(data, { transaction: t }).then(event => {
+                    createdEvent = event;
+                    return event.setMembers(members, { transaction: t });
+                });
+
+            }).then(result => {
+                return createdEvent;
+            }).catch(e => {
+                throw e;
+            });
         }
     }
 
@@ -127,7 +214,9 @@ class Event extends Sequelize.Model {
             location: this.get('location'),
             date: this.get('date'),
             description: this.get('description'),
-            isDeleted: !!this.get('deletedAt')
+            isDeleted: !!this.get('deletedAt'),
+            parentEvent: this.get('parentEventId'),
+            repeatInterval: this.get('repeatInterval')
         };
 
         event.members = this.Members ? this.Members.map(member => {
