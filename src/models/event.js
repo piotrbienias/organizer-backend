@@ -25,6 +25,7 @@ class Event extends Sequelize.Model {
                 allowNull: false
             },
             repeatInterval: Sequelize.INTEGER,
+            endDate: Sequelize.DATE,
             parentEventId: {
                 type: Sequelize.INTEGER,
                 references: {
@@ -96,15 +97,141 @@ class Event extends Sequelize.Model {
         this.belongsToMany(models.User, { through: models.EventMember, as: 'Members', foreignKey: 'eventId' });
     }
 
+    static updateCycle(eventId, data) {
+        return this.findById(eventId).then(event => {
+            if (event) {
+
+                if (!event.get('repeatInterval')) {
+                    throw new Error('To wydarzenie nie nalezy do cyklu!');
+                }
+
+                return event.getMembers().then(members => {
+                    data.members = members.map(member => {
+                        return member.id
+                    });
+
+                    return this.createRepeatableEvent(data).then(events => {
+                        // return events[0].getParentEvent
+                    })
+                });
+
+            }
+            
+            return null;
+        });
+    }
+
+    static deleteCycle(eventId) {
+        return this.findById(eventId).then(event => {
+            if (event) {
+
+                if (!event.get('repeatInterval')) {
+                    throw new Error('To wydarzenie nie nalezy do cyklu!');
+                }
+
+                var idToDestroy = event.get('parentEventId') ? event.get('parentEventId') : event.get('id');
+                var query = {
+                    where: {
+                        $and: {
+                            $or: {
+                                id: idToDestroy,
+                                parentEventId: idToDestroy
+                            },
+                            id: {
+                                $ne: event.get('id')
+                            }
+                        }
+                        
+                    }
+                };
+
+                return this.sequelize.transaction(t => {
+
+                    return this.destroy(query, { transaction: t }).then(deletedRows => {
+                        var updateData = {
+                            repeatInterval: null,
+                            endDate: null,
+                            parentEventId: null
+                        };
+
+                        return event.update(updateData, { transaction: t });
+                    });
+
+                }).then(self => {
+                    return self;
+                }).catch(e => {
+                    throw e;
+                });
+
+                
+                
+            } else {
+                return null;
+            }
+        }).catch(e => {
+            throw e;
+        });
+    }
+
+    static updateEvent(eventId, data) {
+        var updateAll = data.updateAll;
+
+        return this.findById(eventId).then(event => {
+
+            if (event) {
+                return this.sequelize.transaction(t => {
+
+                    if (!updateAll) {
+                        return event.update(data, { transaction: t }).then(self => {
+                            return self.setMembers(data.members, { transaction: t }).then(() => {
+                                return self;
+                            });
+                        });
+                    } else {
+                        delete data['id'];
+                        delete data['date'];
+                        delete data['repeatInterval'];
+    
+                        var idToUpdate = event.get('parentEventId') ? event.get('parentEventId') : event.get('id');
+                        var query = {
+                            where: {
+                                $or: {
+                                    parentEventId: idToUpdate,
+                                    id: idToUpdate
+                                }
+                            },
+                            returning: true,
+                            transaction: t
+                        };
+    
+                        return this.update(data, query).then(result => {
+                            
+                            var promisesArray = [];
+                            result[1].forEach(singleEvent => {
+                                promisesArray.push(singleEvent.setMembers(data.members, { transaction: t }));
+                            });
+
+                            return Promise.all(promisesArray).then(result => {
+                                return event;
+                            })
+                        });
+                    }
+
+                }).then(result => {
+                    return result;
+                }).catch(e => {
+                    throw e;
+                });
+
+            }
+
+            return null;
+        });
+    }
+
     static deleteEvent(eventId, deleteAll) {
         return this.findById(eventId).then(event => {
             if (event) {
-                console.log('-----------------------');
-                console.log('DELETE ALL: ', deleteAll);
-                console.log('-----------------------');
-
-                console.log(deleteAll === false);
-                console.log(typeof deleteAll);
 
                 if (!deleteAll) {
                     return event.destroy();
@@ -131,8 +258,7 @@ class Event extends Sequelize.Model {
         });
     }
 
-    static createRepeatableEvent(req) {
-        var data = req.body;
+    static createRepeatableEvent(data) {
         var members = data.members || [];
 
         var repeatInterval = data.repeatInterval;
@@ -214,9 +340,10 @@ class Event extends Sequelize.Model {
             location: this.get('location'),
             date: this.get('date'),
             description: this.get('description'),
-            isDeleted: !!this.get('deletedAt'),
             parentEvent: this.get('parentEventId'),
-            repeatInterval: this.get('repeatInterval')
+            repeatInterval: this.get('repeatInterval'),
+            endDate: this.get('endDate'),
+            isDeleted: !!this.get('deletedAt')
         };
 
         event.members = this.Members ? this.Members.map(member => {

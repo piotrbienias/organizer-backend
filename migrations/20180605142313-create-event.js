@@ -26,6 +26,7 @@ module.exports = {
           allowNull: false
       },
       repeatInterval: Sequelize.INTEGER,
+      endDate: Sequelize.DATE,
       parentEventId: {
           type: Sequelize.INTEGER,
           references: {

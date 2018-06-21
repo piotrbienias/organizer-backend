@@ -54,7 +54,7 @@ export default (io) => {
     // create new event
     router.post('/', (req, res) => {
 
-        models.Event.createRepeatableEvent(req).then(result => {
+        models.Event.createRepeatableEvent(req.body).then(result => {
             if (Array.isArray(result)) {
                 res.send(result.map(event => {
                     return event.serialize();
@@ -72,12 +72,10 @@ export default (io) => {
     // update single event with id = eventId
     router.put('/:eventId', (req, res) => {
 
-        models.Event.findById(req.params['eventId']).then(event => {
+        models.Event.updateEvent(req.params['eventId'], req.body).then(event => {
             if (event) {
-                event.update(req.body).then(self => {
-                    self.reload({ include: [ models.User ] }).then(event => {
-                        res.send(event.serialize());
-                    });
+                event.reload({ include: [ models.User ] }).then(self => {
+                    res.send(self.serialize());
                 });
             } else {
                 res.status(404).send({ message: 'Poszukiwany obiekt nie istnieje' });
@@ -116,6 +114,32 @@ export default (io) => {
             } else {
                 res.status(404).send({ message: 'Poszukiwany obiekt nie istnieje' });
             }
+        });
+
+    });
+
+    
+    // delete events from cycle except given event with id = eventId
+    router.put('/:eventId/delete_cycle', (req, res) => {
+
+        models.Event.deleteCycle(req.params['eventId']).then(result => {
+            if (result) {
+                res.send({ message: 'Inne wydarzenia z tego cyklu zostały usunięte' });
+            } else {
+                res.status(404).send({ message: 'Poszukiwany obiekt nie istnieje' });
+            }
+        }).catch(e => {
+            res.status(500).send(apiError(e));
+        });
+
+    });
+
+
+    // update cycle
+    router.put('/:eventId/update_cycle', (req, res) => {
+
+        models.Event.updateCycle(req.params['eventId'], req.body).then(result => {
+            res.send(result);
         });
 
     });

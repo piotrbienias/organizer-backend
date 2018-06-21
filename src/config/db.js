@@ -4,15 +4,9 @@ import fs from 'fs';
 import path from 'path';
 import Sequelize from 'sequelize';
 
-var sequelize = new Sequelize(
-    process.env.DB_NAME,
-    process.env.DB_USER,
-    process.env.DB_PASS,
-    {
-        host: process.env.DB_HOST,
-        dialect: 'postgres'
-    }
-);
+import { development } from './../../conn';
+
+var sequelize = new Sequelize(development);
 
 sequelize.Validator.notNull = function(item) {
     return !this.isNull(item);
