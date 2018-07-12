@@ -35,6 +35,48 @@ let SIMPLE_ERROR_CLASSES = [
     'BulkRecordError'
 ];
 
+var responseApiError = (error, response) => {
+    
+    var errorObject = {
+        statusCode: 422,
+        message: 'Bład podczas wykonywania operacji',
+        data: {
+            type: error.constructor.name,
+            message: error.message
+        }
+    };
+
+    if (SIMPLE_ERROR_CLASSES.includes(error.constructor.name)) {
+
+        errorObject.statusCode = 500;
+
+    } else if (error.constructor.name === 'UniqueConstraintError') {
+
+        errorObject.data['fields'] = mapObject(error.fields, (field, value) => { return error.message });
+
+    } else if (error.constructor.name === 'ExclusionConstraintError') {
+
+        errorObject.data['fields'] = error.fields;
+        errorObject.data['value'] = error.value;
+
+    } else if (error.constructor.name === 'ValidationError') {
+
+        errorObject.data.fields = {};
+        Object.assign(errorObject.data.fields, ...error.errors.map(singleError => {
+            return { [singleError.path]: singleError.message };
+        }));
+    } else if (error.constructor.name === 'ForeignKeyConstraintError') {
+
+        errorObject.data.fields = {
+            [error.index.split('_')[1].slice(0, -2)]: 'Wybrany element nie istnieje'
+        };
+
+    }
+
+    return response.status(errorObject.statusCode).send(errorObject);
+
+}
+
 var apiError = (error) => {
 
     var errorObject = {
@@ -79,5 +121,6 @@ var apiError = (error) => {
 
 export {
     TransformSequelizeValidationError,
-    apiError
+    apiError,
+    responseApiError
 };

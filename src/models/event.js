@@ -55,6 +55,15 @@ class Event extends Sequelize.Model {
                     return this.setDataValue('parentEventId', parentEventId);
                 }
             },
+            hooks: {
+                // delete all reminders of currently deleted event
+                afterDestroy: (event, options) => {
+                    this.sequelize.models.Reminder.destroy({
+                        where: { targetId: event.id, targetModel: 'Event' },
+                        transaction: options.transaction
+                    });
+                }
+            },
             scopes: {
                 withOrganizer: function() {
                     return {
@@ -97,6 +106,7 @@ class Event extends Sequelize.Model {
         this.belongsToMany(models.User, { through: models.EventMember, as: 'Members', foreignKey: 'eventId' });
     }
 
+    // TODO: fix this method to properly handle updating repeatable event
     static updateCycle(eventId, data) {
         return this.findById(eventId).then(event => {
             if (event) {
@@ -234,7 +244,17 @@ class Event extends Sequelize.Model {
             if (event) {
 
                 if (!deleteAll) {
-                    return event.destroy();
+
+                    return this.sequelize.transaction(t => {
+
+                        return event.destroy({ transaction: t });
+
+                    }).then(result => {
+                        return result;
+                    }).catch(e => {
+                        throw e;
+                    });
+
                 } else {
                     var idToDestroy = event.get('parentEventId') ? event.get('parentEventId') : event.get('id');
                     var query = {
@@ -246,11 +266,19 @@ class Event extends Sequelize.Model {
                         }
                     };
 
-                    return this.destroy(query).then(deletedRows => {
+                    return this.sequelize.transaction(t => {
+
+                        query['transaction'] = t;
+                        query['individualHooks'] = true;
+
+                        return this.destroy(query);
+
+                    }).then(deletedRows => {
                         return deletedRows;
                     }).catch(e => {
                         throw e;
                     });
+
                 }
             }
             

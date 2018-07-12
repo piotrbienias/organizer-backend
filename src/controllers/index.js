@@ -9,6 +9,7 @@ import permissionRouter     from './permission'
 import monthlyBudgetRouter  from './monthlyBudget';
 import expenseRouter        from './expense';
 import eventRouter          from './event';
+import reminderRouter       from './reminder';
 
 
 
@@ -25,6 +26,7 @@ export default (io) => {
     router.use('/monthly_budgets',  monthlyBudgetRouter(io));
     router.use('/expenses',         expenseRouter);
     router.use('/events',           eventRouter(io));
+    router.use('/reminders',         reminderRouter(io));
 
     return router;
 

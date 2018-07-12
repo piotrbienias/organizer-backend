@@ -4,7 +4,9 @@ import fs from 'fs';
 import path from 'path';
 import Sequelize from 'sequelize';
 
-import { development } from './../../conn';
+import connection from './../../conn';
+
+var development = connection[process.env.NODE_ENV || 'development'];
 
 var sequelize = new Sequelize(development);
 

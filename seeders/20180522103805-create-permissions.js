@@ -17,6 +17,16 @@ module.exports = {
         id: 3,
         name: 'Moze zarządzać wydatkami',
         label: 'can-manage-monthly-budgets'
+      },
+      {
+        id: 4,
+        name: 'Moze zarządzać wydarzeniami',
+        label: 'can-manage-events'
+      },
+      {
+        id: 5,
+        name: 'Moze zarządzać przypomnieniami',
+        label: 'can-manage-reminders'
       }
     ]);
   },

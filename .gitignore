@@ -65,3 +65,7 @@ build/
 
 # package json lock
 package-lock.json
+
+# deploy configuration
+config/
+Capfile

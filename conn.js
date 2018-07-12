@@ -5,5 +5,12 @@ module.exports = {
         database: process.env.DB_NAME,
         host: process.env.DB_HOST,
         dialect: 'postgres'
+    },
+    staging: {
+        username: 'username',
+        password: 'password',
+        database: 'database',
+        host: 'localhost',
+        dialect: 'postgres'
     }
 };

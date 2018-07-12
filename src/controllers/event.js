@@ -4,11 +4,18 @@ import express from 'express';
 
 import models from './../config/db';
 import { apiError } from './../helpers/errors';
+import { checkIfUserHasPermission } from './../helpers/auth';
 
 
 export default (io) => {
 
     var router = express.Router();
+
+
+    // check if user can manage events
+    router.use((req, res, next) => {
+        checkIfUserHasPermission('can-manage-events', req, res, next);
+    });
 
 
     // return all events
@@ -30,6 +37,26 @@ export default (io) => {
         }
 
         models.Event.scope(['withOrganizer', 'withMembers']).findAll(queryOptions).then(events => {
+            res.send(events.map(event => {
+                return event.serialize();
+            }));
+        });
+
+    });
+
+
+    // return all events after specific date
+    router.get('/after/:date', (req, res) => {
+
+        var queryOptions = {
+            where: {
+                date: {
+                    $gte: req.params['date']
+                }
+            }
+        };
+
+        models.Event.findAll(queryOptions).then(events => {
             res.send(events.map(event => {
                 return event.serialize();
             }));
@@ -95,7 +122,7 @@ export default (io) => {
         models.Event.deleteEvent(req.params['eventId'], deleteAll).then(() => {
             res.send({ message: 'Obiekt został pomyślnie usunięty' });
         }).catch(e => {
-            res.status(500).send(apiErro(e));
+            res.status(500).send(apiError(e));
         })
 
     });
@@ -143,6 +170,24 @@ export default (io) => {
         });
 
     });
+
+
+    // get reminders of event having id = eventId
+    router.get('/:eventId/reminders', (req, res) => {
+
+        models.Event.findById(req.params['eventId'], { paranoid: false }).then(event => {
+            if (event) {
+                models.Reminder.findAll({ where: { targetModel: 'Event', targetId: event.get('id') } }).then(reminders => {
+                    res.send(reminders.map(reminder => {
+                        return reminder.serialize();
+                    }));
+                });
+            } else {
+                res.status(404).send({ message: 'Poszukiwany obiekt nie istnieje' });
+            }
+        })
+
+    })
 
     return router;
 

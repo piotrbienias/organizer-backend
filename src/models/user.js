@@ -73,7 +73,8 @@ class User extends Sequelize.Model {
     static associate(models) {
         this.belongsTo(models.UserCategory, { foreignKey: 'userCategoryId' });
         this.belongsToMany(models.Permission, { as: 'Permissions', through: models.UserPermissions, foreignKey: 'userId' });
-        this.belongsToMany(models.Event, { as: 'Members', through: models.EventMember, foreignKey: 'memberId' });
+        this.belongsToMany(models.Event, { as: 'Events', through: models.EventMember, foreignKey: 'memberId' });
+        this.belongsToMany(models.Reminder, { as: 'Reminders', through: models.ReminderUser, foreignKey: 'userId' });
     }
 
     static findByUsername(username) {

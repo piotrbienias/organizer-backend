@@ -1,11 +1,10 @@
 import express from 'express';
-import http from 'http';
 import socketIO from 'socket.io';
 import bodyParser from 'body-parser';
 
 import routers from './controllers';
-import db from './config/db';
 import { verifyTokenMiddleware } from './helpers/auth';
+
 
 
 var app = express();
@@ -27,7 +26,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// app.use(/^((?!\/auth\/login\/)).*$/, verifyTokenMiddleware);
+app.use(/^((?!\/auth\/login\/)).*$/, verifyTokenMiddleware);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
