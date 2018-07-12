@@ -9,7 +9,7 @@ router.get('/', (req, res) => {
 
     models.UserCategory.findAll().then(userCategories => {
         res.send(userCategories.map(userCategory => {
-            return userCategory.toJson();
+            return userCategory.serialize();
         }));
     });
 

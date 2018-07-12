@@ -9,7 +9,7 @@ router.get('/', (req, res) => {
 
     models.Permission.findAll().then(permissions => {
         res.send(permissions.map(permission => {
-            return permission.toJson();
+            return permission.serialize();
         }));
     }).catch(e => {
         res.status(400).send(e);

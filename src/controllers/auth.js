@@ -11,7 +11,7 @@ router.post('/login', (req, res) => {
 
     models.User.scope(['withUserCategory', 'withPermissions']).findByUsername(req.body.username).then(user => {
         if (user && user.validatePassword(req.body.password)) {
-            var userData = user.toJson();
+            var userData = user.serialize();
 
             res.send({
                 message: 'Login successfull',

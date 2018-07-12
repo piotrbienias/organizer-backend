@@ -24,7 +24,7 @@ export default class UserCategory extends Sequelize.Model {
         this.hasMany(models.User, { foreignKey: 'userCategoryId' });
     }
 
-    toJson() {
+    serialize() {
         return {
             id: this.get('id'),
             name: this.get('name')

@@ -29,7 +29,7 @@ export default class Permission extends Sequelize.Model {
         this.belongsToMany(models.User, { as: 'Users', through: models.UserPermissions, foreignKey: 'permissionId' });
     }
 
-    toJson() {
+    serialize() {
         return {
             id: this.get('id'),
             name: this.get('name'),

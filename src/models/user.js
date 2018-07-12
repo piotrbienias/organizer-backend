@@ -4,26 +4,20 @@ import Sequelize from 'sequelize';
 import bcrypt from 'bcryptjs';
 
 
-export default class User extends Sequelize.Model {
+class User extends Sequelize.Model {
 
     static init(sequelize) {
         return super.init({
             username: {
                 type: Sequelize.STRING,
-                unique: true,
-                allowNull: {
-                    msg: 'Proszę podać nazwę uzytkownika'
-                }
+                unique: { msg: 'Podana nazwa uzytkownika jest juz zajęta' },
+                allowNull: { msg: 'Proszę podać nazwę uzytkownika' }
             },
             password: {
                 type: Sequelize.STRING,
-                allowNull: {
-                    msg: 'Proszę podać hasło'
-                },
+                allowNull: { msg: 'Proszę podać hasło' },
                 validate: {
-                    notEmpty: {
-                        msg: 'Hasło nie moze być puste'
-                    }
+                    notEmpty: { msg: 'Hasło nie moze być puste' }
                 },
                 set(value) {
                     this.setDataValue('password', bcrypt.hashSync(value, 10));
@@ -38,9 +32,10 @@ export default class User extends Sequelize.Model {
             },
             email: {
                 type: Sequelize.STRING,
-                unique: true,
+                unique: { msg: 'Podany adres e-mail został juz uzyty' },
                 allowNull: false,
                 validate: {
+                    notNull: { msg: 'Proszę podać adres e-mail' },
                     notEmpty: { msg: 'Proszę podać adres e-mail' },
                     isEmail: { msg: 'Proszę podać prawidłowy adres e-mail' }
                 }
@@ -78,6 +73,8 @@ export default class User extends Sequelize.Model {
     static associate(models) {
         this.belongsTo(models.UserCategory, { foreignKey: 'userCategoryId' });
         this.belongsToMany(models.Permission, { as: 'Permissions', through: models.UserPermissions, foreignKey: 'userId' });
+        this.belongsToMany(models.Event, { as: 'Events', through: models.EventMember, foreignKey: 'memberId' });
+        this.belongsToMany(models.Reminder, { as: 'Reminders', through: models.ReminderUser, foreignKey: 'userId' });
     }
 
     static findByUsername(username) {
@@ -93,7 +90,7 @@ export default class User extends Sequelize.Model {
         return this.save();
     }
 
-    toJson() {
+    serialize() {
         var user = {
             id: this.get('id'),
             username: this.get('username'),
@@ -101,13 +98,16 @@ export default class User extends Sequelize.Model {
             isDeleted: !!this.get('deletedAt')
         };
 
-        user.userCategory = this.UserCategory ? this.UserCategory.toJson() : this.get('userCategoryId');
+        user.userCategory = this.UserCategory ? this.UserCategory.serialize() : this.get('userCategoryId');
 
         user.permissions = this.Permissions ? this.Permissions.map(permission => {
-            return permission.toJson();
+            return permission.serialize();
         }) : this.get('Permissions');
 
         return user;
     }
 
 }
+
+
+export default User;

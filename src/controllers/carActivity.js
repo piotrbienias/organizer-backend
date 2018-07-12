@@ -2,14 +2,22 @@ import express from 'express';
 
 import db from '../config/db';
 import { TransformSequelizeValidationError } from '../helpers/errors';
+import { checkIfUserHasPermission } from './../helpers/auth';
 
 var router = express.Router();
+
+
+// check if user can manage car activities
+router.use((req, res, next) => {
+    checkIfUserHasPermission('can-manage-car-activities', req, res, next);
+});
+
 
 router.get('/', (req, res) => {
 
     db.CarActivity.findAll({ order: [['createdAt', 'DESC']] }).then(activities => {
         res.send(activities.map(activity => {
-            return activity.toJson()
+            return activity.serialize()
         }));
     });
 
@@ -18,7 +26,7 @@ router.get('/', (req, res) => {
 router.post('/', (req, res) => {
 
     db.CarActivity.create(req.body).then(activity => {
-        res.send(activity.toJson());
+        res.send(activity.serialize());
     }).catch(e => {
         res.status(400).send(TransformSequelizeValidationError(e));
     });
@@ -30,7 +38,7 @@ router.put('/:carActivityId', (req, res) => {
     db.CarActivity.findById(req.params['carActivityId']).then(activity => {
         if (activity) {
             activity.update(req.body).then(activity => {
-                res.send(activity.toJson());
+                res.send(activity.serialize());
             });
         } else {
             res.status(404).send({ message: 'Podana aktywność nie istnieje' });
