@@ -1,7 +1,6 @@
 var gulp    = require('gulp'),
     babel   = require('gulp-babel'),
-    nodemon = require('gulp-nodemon'),
-    node;
+    nodemon = require('gulp-nodemon');
 
 
 // babel
