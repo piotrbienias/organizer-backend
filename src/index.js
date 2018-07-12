@@ -26,7 +26,9 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(/^((?!\/auth\/login\/)).*$/, verifyTokenMiddleware);
+if ( !process.env.OMIT_AUTH ) {
+    app.use(/^((?!\/auth\/login\/)).*$/, verifyTokenMiddleware);
+}
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

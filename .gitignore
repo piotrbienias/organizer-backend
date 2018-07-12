@@ -69,3 +69,6 @@ package-lock.json
 # deploy configuration
 config/
 Capfile
+lib/
+Gemfile
+Gemfile.lock
