@@ -26,7 +26,7 @@ app.use((req, res, next) => {
     next();
 });
 
-if ( !process.env.OMIT_AUTH ) {
+if ( process.env.OMIT_AUTH !== "true" ) {
     app.use(/^((?!\/auth\/login\/)).*$/, verifyTokenMiddleware);
 }
 
