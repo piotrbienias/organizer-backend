@@ -23,8 +23,6 @@ export const createToken = (data) => {
 
 export const verifyTokenMiddleware = (req, res, next) => {
 
-    console.log(req.method);
-
     if (req.method !== 'OPTIONS'){
         
         let token = '';

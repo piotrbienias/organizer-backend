@@ -5,6 +5,8 @@ import bodyParser from 'body-parser';
 import routers from './controllers';
 import { verifyTokenMiddleware } from './helpers/auth';
 
+import storage from './config/storage';
+
 
 
 var app = express();
