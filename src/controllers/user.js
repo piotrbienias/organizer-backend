@@ -2,12 +2,18 @@ import express from 'express';
 
 import db from '../config/db';
 import { TransformSequelizeValidationError, apiError } from '../helpers/errors';
+import { checkIfUserHasPermission } from './../helpers/auth';
 
 
 export default (io) => {
 
     var router = express.Router();
     const UPDATE_USER_LIST = 'UPDATE_USER_LIST';
+
+    // check if user can manage users
+    router.use((req, res, next) => {
+        checkIfUserHasPermission('can-manage-users', req, res, next);
+    });
 
     // return number of all users
     router.get('/count', (req, res) => {
@@ -23,9 +29,8 @@ export default (io) => {
     router.get('/', (req, res) => {
         var queryOptions = {
             paranoid: false,
-            limit: req.query['perPage'],
-            offset: (req.query['page'] - 1) * req.query['perPage'],
-            where: { id: { $ne: req.user.id } },
+            limit: req.query['perPage'] || undefined,
+            offset: req.query['page'] ? (req.query['page'] - 1) * req.query['perPage'] : undefined,
             order: [['username', 'ASC']]
         };
 

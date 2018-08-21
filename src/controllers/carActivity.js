@@ -2,8 +2,16 @@ import express from 'express';
 
 import db from '../config/db';
 import { TransformSequelizeValidationError } from '../helpers/errors';
+import { checkIfUserHasPermission } from './../helpers/auth';
 
 var router = express.Router();
+
+
+// check if user can manage car activities
+router.use((req, res, next) => {
+    checkIfUserHasPermission('can-manage-car-activities', req, res, next);
+});
+
 
 router.get('/', (req, res) => {
 
